@@ -7,9 +7,18 @@ phases:
   build:
     commands:
       - echo Build started on `date`
-      - dotnet publish -c release -o ./build_output SampleCore.csproj
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 662641492315.dkr.ecr.eu-central-1.amazonaws.com
+      - docker build -t askcp-repo .
+      - docker tag askcp-repo:latest 662641492315.dkr.ecr.eu-central-1.amazonaws.com/askcp-repo:latest
+      # - dotnet publish -c release -o ./build_output SampleCore.csproj
+      
+  post_build:
+    commands:
+      - docker push 662641492315.dkr.ecr.eu-central-1.amazonaws.com/askcp-repo:latest
+      - printf '[{"name":"askcp-repo","imageUri":"662641492315.dkr.ecr.eu-central-1.amazonaws.com/askcp-repo:latest"}]' > imagedefinitions.json
 artifacts:
   files:
+    - imagedefinitions.json
     - CodeBuild-SampleCore/build_output/**/*
     - scripts/**/*
     - appspec.yml
